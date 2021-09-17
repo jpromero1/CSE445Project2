@@ -265,7 +265,7 @@ namespace CSE445ProjA3A4
                 //comment on sempahore
                 semaphore.Release(3);
                 Console.WriteLine("Main Thread Exit");
-
+                //Hannah wrote this
             }
         }
         /*
