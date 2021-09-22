@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-namespace CSE445ProjA3A4
+namespace CSE445Project2
 {
     using System;
     using System.Threading;
@@ -9,10 +9,13 @@ namespace CSE445ProjA3A4
     public class movieTheater
     {
         static Random rng = new Random();
-        private static Semaphore semaphore;
+        private static Semaphore semaphoreWrite, semaphoreRead;
+        private static int[] multiCellBufferTest = {-1, -1, -1};
+        private static MultiCellBuffer multiCellBuffer;
 
         public class TheaterONE
         {
+            int theaterID = 1;
             int countOne = 0;
             int seatsOne = 100; // I think these should be Static???
             public static event priceCutEvent priceCutONE; //Link event to delegate
@@ -25,8 +28,6 @@ namespace CSE445ProjA3A4
 
             {
                 int price = rng.Next(1, 10);
-
-                //int price = 14;
                 return price;
             }
             public int getPrice() //getter for current Ticket Price
@@ -64,6 +65,7 @@ namespace CSE445ProjA3A4
                     //take order from queue
                     //FulFill Order using Check Availability
                     //CHECK AVAILABILITY, IF NONE THEN QUIT
+                    multiCellBuffer.getOrder(theaterID);
 
                     //RECALC PRICE
                     Console.WriteLine("ticket seller! Count1 is {0}", countOne);
@@ -84,7 +86,7 @@ namespace CSE445ProjA3A4
                     if (priceCutONE != null)//if there is a subscriber -> ticket broker
                     {
 
-                        priceCutONE(newPrice, 1);//emit event to subscriber
+                        priceCutONE(newPrice, theaterID);//emit event to subscriber
                     }
 
 
@@ -99,6 +101,7 @@ namespace CSE445ProjA3A4
 
         public class TheaterTWO
         {
+            int theaterID = 2;
             int countTwo = 0;
             int seatTwo = 100; // I think these should be Static???
             public static event priceCutEvent priceCutTWO; //Link event to delegate
@@ -150,6 +153,7 @@ namespace CSE445ProjA3A4
                     //take order from queue
                     //FulFill Order using Check Availability
                     //CHECK AVAILABILITY, IF NONE THEN QUIT
+                    multiCellBuffer.getOrder(theaterID);
 
                     //RECALC PRICE
                     Console.WriteLine("ticket seller! Count2 is {0}", countTwo);
@@ -169,7 +173,7 @@ namespace CSE445ProjA3A4
                     Console.WriteLine("new price calculated in THEATER TWO it is {0}", newPrice);
                     if (priceCutTWO != null)//if there is a subscriber -> ticket broker
                     {
-                        priceCutTWO(newPrice, 2);//emit event to subscriber
+                        priceCutTWO(newPrice, theaterID);//emit event to subscriber
                     }
 
 
@@ -181,7 +185,7 @@ namespace CSE445ProjA3A4
         }
         public class ticketBroker
         {
-            private int ccNum;
+            private int ccNum = 1000; //TODO CHANGE
             private int brokerID;
 
             public ticketBroker(int brokerID)
@@ -206,15 +210,15 @@ namespace CSE445ProjA3A4
                 //public OrderClass(string ticketBrokerID, int cardNo, int tickets, string theaterID, double ticketPrice)
 
                 //Check if there is a cell available to place the order in
-                semaphore.WaitOne();
+                OrderClass newOrder = new OrderClass(this.brokerID, ccNum, rng.Next(1, 20), theaterID, newPrice, DateTime.Now);
+                multiCellBuffer.setOrder(newOrder);
+                //place order in Buffer.
 
-                //place order in Buffer. 
-
-                Console.WriteLine("The new price in theater {0} is {1} by broker {2}", theaterID, newPrice, brokerID);
+                Console.WriteLine("The new price in theater {0} is {1} by broker {2}\n", theaterID, newPrice, brokerID);
 
 
                 //once confrimed that we received it??
-                semaphore.Release();
+                //semaphore.Release();
 
             }
 
@@ -229,6 +233,7 @@ namespace CSE445ProjA3A4
                 //create movie theater objects
                 TheaterONE theaterone = new TheaterONE();
                 TheaterTWO theatertwo = new TheaterTWO();
+                multiCellBuffer = new MultiCellBuffer();
 
                 //create ticket seller thread
                 Thread sellerOne = new Thread(new ThreadStart(theaterone.ticketSeller));
@@ -238,7 +243,8 @@ namespace CSE445ProjA3A4
                 //start tikcetseller thread
                 sellerOne.Start();
                 sellerTwo.Start();
-
+                semaphoreWrite = new Semaphore(0, 3);
+                //semaphoreRead = new Semaphore(0, 2);
 
 
 
@@ -263,7 +269,8 @@ namespace CSE445ProjA3A4
 
                 Thread.Sleep(500);
                 //comment on sempahore
-                semaphore.Release(3);
+                //semaphoreRead.Release(3);
+                semaphoreWrite.Release(3);
                 Console.WriteLine("Main Thread Exit");
 
             }
@@ -279,30 +286,31 @@ namespace CSE445ProjA3A4
 
         public class OrderClass
         {
-            private string ticketBrokerID { get; set; }
+            private int ticketBrokerID { get; set; }
             private int cardNo { get; set; }
             private int tickets { get; set; }
-            private string theaterID { get; set; }
+            private int theaterID { get; set; }
             private double ticketPrice { get; set; }
+            private DateTime orderTime { get; set; }
 
-
-            public OrderClass(string ticketBrokerID, int cardNo, int tickets, string theaterID, double ticketPrice)
+            public OrderClass(int ticketBrokerID, int cardNo, int tickets, int theaterID, double ticketPrice, DateTime orderTime)
             {
                 this.ticketBrokerID = ticketBrokerID;
                 this.cardNo = cardNo;
                 this.tickets = tickets;
                 this.theaterID = theaterID;
                 this.ticketPrice = ticketPrice;
+                this.orderTime = orderTime;
             }
 
             //ticketBrokerID getter
-            public string getTicketBrokerID()
+            public int getTicketBrokerID()
             {
                 return ticketBrokerID;
             }
 
             //ticketBrokerID setter
-            public void setTicketBrokerID(string ticketBrokerID)
+            public void setTicketBrokerID(int ticketBrokerID)
             {
                 this.ticketBrokerID = ticketBrokerID;
             }
@@ -332,13 +340,13 @@ namespace CSE445ProjA3A4
             }
 
             //theaterID getter
-            public string getTheaterID()
+            public int getTheaterID()
             {
                 return theaterID;
             }
 
             //theaterID stter 
-            public void setTheaterID(string theaterID)
+            public void setTheaterID(int theaterID)
             {
                 this.theaterID = theaterID;
             }
@@ -356,5 +364,51 @@ namespace CSE445ProjA3A4
             }
         }
 
+        class MultiCellBuffer
+        {
+            private OrderClass[] orderBuffer = { null, null, null};
+
+            public OrderClass getOrder(int theaterID)
+            {
+                lock (this)
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (orderBuffer[i] != null && orderBuffer[i].getTheaterID() == theaterID) //order was for me 
+                        {
+                            OrderClass orderToReturn = orderBuffer[i];
+                            orderBuffer[i] = null;
+                            Console.Write("Theater{0} consumed an order!\n", theaterID);
+                            return orderToReturn;
+                        }
+                    }
+                }
+                return null;
+            }
+
+            public void setOrder(OrderClass order)
+            {
+                semaphoreWrite.WaitOne();
+                lock (this)
+                {
+                    if (orderBuffer[0] == null) //first available
+                    {
+                        orderBuffer[0] = order;
+                        Console.WriteLine("Broker{0} just placed an order for Theater{1}\n", order.getTicketBrokerID(), order.getTheaterID());
+                    }
+                    else if (orderBuffer[1] == null) //2nd available one 
+                    {
+                        orderBuffer[1] = order;
+                        Console.WriteLine("Broker{0} just placed an order for Theater{1}\n", order.getTicketBrokerID(), order.getTheaterID());
+                    }
+                    else if (orderBuffer[2] == null) //3rd one is available
+                    {
+                        orderBuffer[2] = order;
+                        Console.WriteLine("Broker{0} just placed an order for Theater{1}\n", order.getTicketBrokerID(), order.getTheaterID());
+                    }
+                    semaphoreWrite.Release();
+                }
+            }
+        }
     }
 }
