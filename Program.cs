@@ -272,7 +272,7 @@ namespace CSE445Project2
                 //semaphoreRead.Release(3);
                 semaphoreWrite.Release(3);
                 Console.WriteLine("Main Thread Exit");
-
+                //Hannah wrote this
             }
         }
         /*
