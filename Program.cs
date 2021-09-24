@@ -12,6 +12,7 @@ namespace CSE445Project2
         private static Semaphore semaphoreWrite, semaphoreRead;
         private static int[] multiCellBufferTest = { -1, -1, -1 };
         private static MultiCellBuffer multiCellBuffer;
+        private static Confirmationbuffer confirmationbuffer;
 
         public class TheaterONE
         {
@@ -43,6 +44,8 @@ namespace CSE445Project2
                     seatsOne = seatsOne - numTickets;
                     available = true;
                     //TODO add confirmation that order was placed and send back to ticket broker
+                    Console.WriteLine("DEBUG: Theater{0} is adding Confirmation for Broker{1}", theaterID, order.getTicketBrokerID());
+                    confirmationbuffer.addConfirmation(order.getTicketBrokerID(), order);
                     return available;
                 }
                 return available;
@@ -59,14 +62,25 @@ namespace CSE445Project2
                 //update price
 
 
-                while (countOne < 10 && seatsOne >= 0)
+                while (countOne < 10 && seatsOne > 0)
                 {
                     Thread.Sleep(500);
                     //take order from queue
                     //FulFill Order using Check Availability
                     //CHECK AVAILABILITY, IF NONE THEN QUIT
-                    multiCellBuffer.getOrder(theaterID);
-
+                    OrderClass order = multiCellBuffer.getOrder(theaterID);
+                    if (order != null)
+                    {
+                        if (checkAvailability(order)) //Order Was Available and confirmed
+                        {
+                            Console.WriteLine("Theather{0} has sent a confirmation to Broker{1} for {2} Tickets.\nTheater{0} has {3} tickets left.\n", theaterID, order.getTicketBrokerID(), order.getTickets(), seatsOne);
+                        }
+                        else
+                        {
+                            confirmationbuffer.voidOrder(order.getTicketBrokerID());
+                            Console.WriteLine("Theather{0} could not fulfill order for Broker{1} for {2} Tickets.\nTheater{0} only has {3} tickets left.\n", theaterID, order.getTicketBrokerID(), order.getTickets(), seatsOne);
+                        }
+                    }
                     //RECALC PRICE
                     Console.WriteLine("ticket seller! Count1 is {0}", countOne);
                     int newPrice = calculatePrice();//price calc function
@@ -77,7 +91,6 @@ namespace CSE445Project2
             }
             public void lowerPrice(int newPrice) //Checking if price cut actually happened, if yes, call delegate 
             {
-                Console.WriteLine("Hello!");
                 if (newPrice <= ticketPriceONE)
                 {
                     ticketPriceONE = newPrice;
@@ -131,6 +144,8 @@ namespace CSE445Project2
                     seatTwo = seatTwo - numTickets;
                     available = true;
                     //TODO add confirmation that order was placed and send back to ticket broker
+                    Console.WriteLine("DEBUG: Theater{0} is adding Confirmation for Broker{1}", theaterID, order.getTicketBrokerID());
+                    confirmationbuffer.addConfirmation(order.getTicketBrokerID(), order);
                     return available;
                 }
                 return available;
@@ -147,14 +162,26 @@ namespace CSE445Project2
                 //update price
 
 
-                while (countTwo < 10 && seatTwo >= 0)
+                while (countTwo < 10 && seatTwo > 0)
                 {
                     Thread.Sleep(500);
                     //take order from queue
                     //FulFill Order using Check Availability
                     //CHECK AVAILABILITY, IF NONE THEN QUIT
-                    multiCellBuffer.getOrder(theaterID);
+                    OrderClass order = multiCellBuffer.getOrder(theaterID);
+                    if(order != null)
+                    {
+                        if (checkAvailability(order)) //Order Was Available and confirmed
+                        {
+                            Console.WriteLine("Theather{0} has sent a confirmation to Broker{1} for {2} Tickets.\nTheater{0} has {3} tickets left.\n", theaterID, order.getTicketBrokerID(), order.getTickets(), seatTwo);
+                        }
 
+                        else
+                        {
+                            confirmationbuffer.voidOrder(order.getTicketBrokerID());
+                            Console.WriteLine("Theather{0} could not fulfill order for Broker{1} for {2} Tickets.\nTheater{0} only has {3} tickets left.\n", theaterID, order.getTicketBrokerID(), order.getTickets(), seatTwo);
+                        }
+                    }
                     //RECALC PRICE
                     Console.WriteLine("ticket seller! Count2 is {0}", countTwo);
                     int newPrice = calculatePrice();//price calc function
@@ -171,15 +198,14 @@ namespace CSE445Project2
                     ticketPriceTwo = newPrice;
                     countTwo++;
                     Console.WriteLine("new price calculated in THEATER TWO it is {0}", newPrice);
+
                     if (priceCutTWO != null)//if there is a subscriber -> ticket broker
                     {
                         priceCutTWO(newPrice, theaterID);//emit event to subscriber
                     }
 
-
                 }
                 ticketPriceTwo = newPrice;
-
 
             }
         }
@@ -201,14 +227,27 @@ namespace CSE445Project2
 
             public void ticketBrokerFunc()
             {
-                Console.WriteLine("Broker" + Thread.CurrentThread.Name + " has Started");
-                //Loop to read the Confimration buffer, if there is a confirmation placed, then print and release semaphore???? 
+                //Console.WriteLine("Broker" + Thread.CurrentThread.Name + " has Started");
+                for(int i = 0; i < 10; i++)
+                {
+                    OrderClass confirmation = confirmationbuffer.getConfirmation(brokerID);
+                    if (confirmation != null)
+                    {
+                        Console.WriteLine("Broker{0} confirmed Order from Theater{1} for {2} Tickets at " + confirmation.getOrderTime(), brokerID, confirmation.getTheaterID(), confirmation.getTickets());
+                    }
+                }
             }
             public void ticketOnSale(double newPrice, int theaterID) //Event Handler
             {
                 //Make the Order here. 
                 //public OrderClass(string ticketBrokerID, int cardNo, int tickets, string theaterID, double ticketPrice)
+                OrderClass confirmation = confirmationbuffer.getConfirmation(brokerID);
+                if (confirmation != null)
+                {
+                    Console.WriteLine("Broker{0} confirmed Order from Theater{1} for {2} Tickets at " + confirmation.getOrderTime(), brokerID, theaterID, confirmation.getTickets());
+                }
 
+                
                 //Check if there is a cell available to place the order in
                 OrderClass newOrder = new OrderClass(this.brokerID, ccNum, rng.Next(1, 20), theaterID, newPrice, DateTime.Now);
                 multiCellBuffer.setOrder(newOrder);
@@ -234,6 +273,7 @@ namespace CSE445Project2
                 TheaterONE theaterone = new TheaterONE();
                 TheaterTWO theatertwo = new TheaterTWO();
                 multiCellBuffer = new MultiCellBuffer();
+                confirmationbuffer = new Confirmationbuffer();
 
                 //create ticket seller thread
                 Thread sellerOne = new Thread(new ThreadStart(theaterone.ticketSeller));
@@ -244,7 +284,7 @@ namespace CSE445Project2
                 sellerOne.Start();
                 sellerTwo.Start();
                 semaphoreWrite = new Semaphore(0, 3);
-                //semaphoreRead = new Semaphore(0, 2);
+                semaphoreRead = new Semaphore(0, 1);
 
 
 
@@ -269,7 +309,7 @@ namespace CSE445Project2
 
                 Thread.Sleep(500);
                 //comment on sempahore
-                //semaphoreRead.Release(3);
+                semaphoreRead.Release(1);
                 semaphoreWrite.Release(3);
                 Console.WriteLine("Main Thread Exit");
                 //Hannah wrote this
@@ -362,11 +402,23 @@ namespace CSE445Project2
             {
                 this.ticketPrice = ticketPrice;
             }
+
+            //Time Setter
+            public void setOrderTime(DateTime orderTime)
+            {
+                this.orderTime = orderTime;
+            }
+
+            public DateTime getOrderTime()
+            {
+                return orderTime;
+            }
         }
 
         class MultiCellBuffer
         {
             private OrderClass[] orderBuffer = { null, null, null };
+            private int orders = 0;
 
             public OrderClass getOrder(int theaterID)
             {
@@ -378,6 +430,7 @@ namespace CSE445Project2
                         {
                             OrderClass orderToReturn = orderBuffer[i];
                             orderBuffer[i] = null;
+                            orders--;
                             Console.Write("Theater{0} consumed an order!\n", theaterID);
                             return orderToReturn;
                         }
@@ -394,19 +447,70 @@ namespace CSE445Project2
                     if (orderBuffer[0] == null) //first available
                     {
                         orderBuffer[0] = order;
+                        orders++;
                         Console.WriteLine("Broker{0} just placed an order for Theater{1}\n", order.getTicketBrokerID(), order.getTheaterID());
                     }
                     else if (orderBuffer[1] == null) //2nd available one 
                     {
                         orderBuffer[1] = order;
+                        orders++;
                         Console.WriteLine("Broker{0} just placed an order for Theater{1}\n", order.getTicketBrokerID(), order.getTheaterID());
                     }
                     else if (orderBuffer[2] == null) //3rd one is available
                     {
                         orderBuffer[2] = order;
+                        orders++;
                         Console.WriteLine("Broker{0} just placed an order for Theater{1}\n", order.getTicketBrokerID(), order.getTheaterID());
                     }
                     semaphoreWrite.Release();
+                }
+            }
+        }
+
+        class Confirmationbuffer
+        {
+            private OrderClass[] confirmations = { null, null, null, null, null };
+
+            public void addConfirmation(int brokerID, OrderClass confirmation)
+            {
+                semaphoreRead.WaitOne();
+                lock (this) //Maybe we can do try enter????
+                {
+                    while (confirmations[brokerID - 1] != null)
+                    {
+                        Console.WriteLine("Theater{0} Stuck in Wait for Broker{1}\n", confirmation.getTheaterID(), brokerID);
+                        Monitor.Wait(this);
+                    }
+                    confirmations[brokerID - 1] = confirmation;
+                    Monitor.Pulse(this);
+                    semaphoreRead.Release();
+                }
+            }
+
+            public OrderClass getConfirmation(int brokerID)
+            {
+                semaphoreRead.WaitOne();
+                lock (this)
+                {
+                    if(confirmations[brokerID -1] != null)
+                    {
+                        OrderClass confirmation = confirmations[brokerID - 1];
+                        confirmations[brokerID - 1] = null;
+                        semaphoreRead.Release();
+                        return confirmation;
+                    }
+                }
+                semaphoreRead.Release();
+                return null;
+            }
+
+            public void voidOrder(int brokerID)
+            {
+                semaphoreRead.WaitOne();
+                lock (this)
+                {
+                    confirmations[brokerID - 1] = null;
+                    semaphoreRead.Release();
                 }
             }
         }
