@@ -35,7 +35,7 @@ namespace CSE445Project2
             {
                 return ticketPriceONE;
             }
-            public bool checkAvailability(OrderClass order) //This will be done to try and fulfill Orders once we are looking at buffer?
+            public bool checkAvailability(Order order) //This will be done to try and fulfill Orders once we are looking at buffer?
             {
                 bool available = false;
                 int numTickets = order.getTickets();
@@ -68,7 +68,7 @@ namespace CSE445Project2
                     //take order from queue
                     //FulFill Order using Check Availability
                     //CHECK AVAILABILITY, IF NONE THEN QUIT
-                    OrderClass order = multiCellBuffer.getOrder(theaterID);
+                    Order order = multiCellBuffer.getOrder(theaterID);
                     if (order != null)
                     {
                         if (checkAvailability(order)) //Order Was Available and confirmed
@@ -135,7 +135,7 @@ namespace CSE445Project2
             {
                 return ticketPriceTwo;
             }
-            public bool checkAvailability(OrderClass order) //This will be done to try and fulfill Orders once we are looking at buffer?
+            public bool checkAvailability(Order order) //This will be done to try and fulfill Orders once we are looking at buffer?
             {
                 bool available = false;
                 int numTickets = order.getTickets();
@@ -168,7 +168,7 @@ namespace CSE445Project2
                     //take order from queue
                     //FulFill Order using Check Availability
                     //CHECK AVAILABILITY, IF NONE THEN QUIT
-                    OrderClass order = multiCellBuffer.getOrder(theaterID);
+                    Order order = multiCellBuffer.getOrder(theaterID);
                     if(order != null)
                     {
                         if (checkAvailability(order)) //Order Was Available and confirmed
@@ -230,7 +230,7 @@ namespace CSE445Project2
                 //Console.WriteLine("Broker" + Thread.CurrentThread.Name + " has Started");
                 for(int i = 0; i < 10; i++)
                 {
-                    OrderClass confirmation = confirmationbuffer.getConfirmation(brokerID);
+                    Order confirmation = confirmationbuffer.getConfirmation(brokerID);
                     if (confirmation != null)
                     {
                         Console.WriteLine("LOOP: Broker{0} confirmed Order from Theater{1} for {2} Tickets at " + confirmation.getOrderTime(), brokerID, confirmation.getTheaterID(), confirmation.getTickets());
@@ -241,7 +241,7 @@ namespace CSE445Project2
             {
                 //Make the Order here. 
                 //public OrderClass(string ticketBrokerID, int cardNo, int tickets, string theaterID, double ticketPrice)
-                OrderClass confirmation = confirmationbuffer.getConfirmation(brokerID);
+                Order confirmation = confirmationbuffer.getConfirmation(brokerID);
                 if (confirmation != null)
                 {
                     Console.WriteLine("EVENT: Broker{0} confirmed Order from Theater{1} for {2} Tickets at " + confirmation.getOrderTime(), brokerID, confirmation.getTheaterID(), confirmation.getTickets());
@@ -249,7 +249,7 @@ namespace CSE445Project2
 
                 
                 //Check if there is a cell available to place the order in
-                OrderClass newOrder = new OrderClass(this.brokerID, ccNum, rng.Next(1, 20), theaterID, newPrice, DateTime.Now);
+                Order newOrder = new Order(this.brokerID, ccNum, rng.Next(1, 20), theaterID, newPrice, DateTime.Now);
                 multiCellBuffer.setOrder(newOrder);
                 //place order in Buffer.
 
@@ -324,7 +324,7 @@ namespace CSE445Project2
      * current price
      */
 
-        public class OrderClass
+        public class Order
         {
             private int ticketBrokerID { get; set; }
             private int cardNo { get; set; }
@@ -333,7 +333,7 @@ namespace CSE445Project2
             private double ticketPrice { get; set; }
             private DateTime orderTime { get; set; }
 
-            public OrderClass(int ticketBrokerID, int cardNo, int tickets, int theaterID, double ticketPrice, DateTime orderTime)
+            public Order(int ticketBrokerID, int cardNo, int tickets, int theaterID, double ticketPrice, DateTime orderTime)
             {
                 this.ticketBrokerID = ticketBrokerID;
                 this.cardNo = cardNo;
@@ -417,10 +417,10 @@ namespace CSE445Project2
 
         class MultiCellBuffer
         {
-            private OrderClass[] orderBuffer = { null, null, null };
+            private Order[] orderBuffer = { null, null, null };
             private int orders = 0;
 
-            public OrderClass getOrder(int theaterID)
+            public Order getOrder(int theaterID)
             {
                 lock (this)
                 {
@@ -428,7 +428,7 @@ namespace CSE445Project2
                     {
                         if (orderBuffer[i] != null && orderBuffer[i].getTheaterID() == theaterID) //order was for me 
                         {
-                            OrderClass orderToReturn = orderBuffer[i];
+                            Order orderToReturn = orderBuffer[i];
                             orderBuffer[i] = null;
                             orders--;
                             Console.Write("Theater{0} consumed an order!\n", theaterID);
@@ -439,7 +439,7 @@ namespace CSE445Project2
                 return null;
             }
 
-            public void setOrder(OrderClass order)
+            public void setOrder(Order order)
             {
                 semaphoreWrite.WaitOne();
                 lock (this)
@@ -469,9 +469,9 @@ namespace CSE445Project2
 
         class Confirmationbuffer
         {
-            private OrderClass[] confirmations = { null, null, null, null, null };
+            private Order[] confirmations = { null, null, null, null, null };
 
-            public void addConfirmation(int brokerID, OrderClass confirmation)
+            public void addConfirmation(int brokerID, Order confirmation)
             {
                 while (confirmations[brokerID - 1] != null)
                 {
@@ -488,7 +488,7 @@ namespace CSE445Project2
                 }
             }
 
-            public OrderClass getConfirmation(int brokerID)
+            public Order getConfirmation(int brokerID)
             {
                // Console.WriteLine("DEBUG: Broker{0} is trying to get confirmation", brokerID);
                 semaphoreRead.WaitOne();
@@ -496,7 +496,7 @@ namespace CSE445Project2
                 {
                     if(confirmations[brokerID -1] != null)
                     {
-                        OrderClass confirmation = confirmations[brokerID - 1];
+                        Order confirmation = confirmations[brokerID - 1];
                         confirmations[brokerID - 1] = null;
                         semaphoreRead.Release();
                         return confirmation;
