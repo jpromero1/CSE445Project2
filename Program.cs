@@ -233,7 +233,7 @@ namespace CSE445Project2
                     OrderClass confirmation = confirmationbuffer.getConfirmation(brokerID);
                     if (confirmation != null)
                     {
-                        Console.WriteLine("Broker{0} confirmed Order from Theater{1} for {2} Tickets at " + confirmation.getOrderTime(), brokerID, confirmation.getTheaterID(), confirmation.getTickets());
+                        Console.WriteLine("LOOP: Broker{0} confirmed Order from Theater{1} for {2} Tickets at " + confirmation.getOrderTime(), brokerID, confirmation.getTheaterID(), confirmation.getTickets());
                     }
                 }
             }
@@ -244,7 +244,7 @@ namespace CSE445Project2
                 OrderClass confirmation = confirmationbuffer.getConfirmation(brokerID);
                 if (confirmation != null)
                 {
-                    Console.WriteLine("Broker{0} confirmed Order from Theater{1} for {2} Tickets at " + confirmation.getOrderTime(), brokerID, theaterID, confirmation.getTickets());
+                    Console.WriteLine("EVENT: Broker{0} confirmed Order from Theater{1} for {2} Tickets at " + confirmation.getOrderTime(), brokerID, confirmation.getTheaterID(), confirmation.getTickets());
                 }
 
                 
@@ -473,22 +473,24 @@ namespace CSE445Project2
 
             public void addConfirmation(int brokerID, OrderClass confirmation)
             {
+                while (confirmations[brokerID - 1] != null)
+                {
+                    //Console.WriteLine("Theater{0} Stuck in Wait for Broker{1}\n", confirmation.getTheaterID(), brokerID);
+                    //Monitor.Wait(this);
+                }
                 semaphoreRead.WaitOne();
                 lock (this) //Maybe we can do try enter????
                 {
-                    while (confirmations[brokerID - 1] != null)
-                    {
-                        Console.WriteLine("Theater{0} Stuck in Wait for Broker{1}\n", confirmation.getTheaterID(), brokerID);
-                        Monitor.Wait(this);
-                    }
+                    
                     confirmations[brokerID - 1] = confirmation;
-                    Monitor.Pulse(this);
+                    //Monitor.Pulse(this);
                     semaphoreRead.Release();
                 }
             }
 
             public OrderClass getConfirmation(int brokerID)
             {
+               // Console.WriteLine("DEBUG: Broker{0} is trying to get confirmation", brokerID);
                 semaphoreRead.WaitOne();
                 lock (this)
                 {
