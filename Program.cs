@@ -1,4 +1,10 @@
-﻿using System;
+﻿/*
+ * CSE 445 Project 2
+ * Chen T/Th 9:00-10:15 AM
+ * Hannah leNoir, ID: 1214742997
+ * Juan Romero, ID: 1214612009
+ */
+using System;
 using System.Threading;
 namespace CSE445Project2
 {
