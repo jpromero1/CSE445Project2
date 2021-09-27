@@ -18,20 +18,99 @@ namespace CSE445Project2
         {
             int theaterID = 1;
             int countOne = 0;
-            int seatsOne = 100; // I think these should be Static???
+            int seatsOne = 200; // I think these should be Static???
             public static event priceCutEvent priceCutONE; //Link event to delegate
                                                            //TODO MAKE THREE THEATRE PRICING SCHEMES
                                                            //for now and testing purposes use RNG and static pricing
-            private static int ticketPriceONE = 40;
+            private static double ticketPriceONE = 40;
 
 
-            public int calculatePrice()  //Pricing Model?
+            public double calculatePrice()  //Pricing Model?
 
             {
-                int price = rng.Next(1, 10);
-                return price;
+                double price;
+                int season = rng.Next(1, 5);
+
+                int dayOfWeek = rng.Next(1, 8);
+
+                if (season % 2 == 1)
+                {
+                    if (dayOfWeek % 3 == 1)
+                    {
+                        if(ticketPriceONE >= 170 && seatsOne >= 50)
+                        {
+                            price = ticketPriceONE / 2;
+                        }
+                        else if(ticketPriceONE >= 170 && seatsOne <= 50)
+                        {
+                            price = (ticketPriceONE / seatsOne) + rng.Next(40, 105);
+                        }
+                        else if(ticketPriceONE < 170 && ticketPriceONE >= 50 && seatsOne >= 50)
+                        {
+                            price = (ticketPriceONE * 2) / 3 + rng.Next(30, 80);
+                        }
+                        else if(ticketPriceONE < 170 && ticketPriceONE >= 50 && seatsOne <= 50)
+                        {
+                            price = ticketPriceONE + rng.Next(1, 30);
+                        }
+                        else
+                        {
+                            price = ticketPriceONE * 2 + rng.Next(25, 70);
+                        }
+                    }
+                    else
+                    {
+                        if(ticketPriceONE <= 100)
+                        {
+                            price = ticketPriceONE * 2; 
+                        }
+                        else
+                        {
+                            price = ticketPriceONE / 2;
+                        }
+                    }
+                    return price;
+                }
+                else
+                {
+                    if(dayOfWeek % 2 == 0 )
+                    {
+                        if(ticketPriceONE >= 165 && seatsOne >= 30)
+                        {
+                            price = ticketPriceONE - rng.Next(1, 120);
+                        }
+                        else if (ticketPriceONE >= 165 && seatsOne <= 30)
+                        {
+                            price = ticketPriceONE / 3;
+                        }
+                        else if(ticketPriceONE < 165 && ticketPriceONE >= 55)
+                        {
+                            price = ticketPriceONE + rng.Next(2, 10);
+                        }
+                        else
+                        {
+                            price = ticketPriceONE * 3; 
+                        }
+                      
+                    }
+                    else
+                    {
+                        if(ticketPriceONE <= 100)
+                        {
+                            price = ticketPriceONE + (ticketPriceONE * rng.Next(1, 5) * .1);
+                        }
+                        else
+                        {
+                            price = ticketPriceONE - rng.Next(30, 60);
+                        }
+                        
+                    }
+                    return price;
+                }
+
+
             }
-            public int getPrice() //getter for current Ticket Price
+            public double getPrice() //getter for current Ticket Price
             {
                 return ticketPriceONE;
             }
@@ -48,6 +127,10 @@ namespace CSE445Project2
                     confirmationbuffer.addConfirmation(order.getTicketBrokerID(), order);
                     return available;
                 }
+                if (numTickets <= 0)
+                {
+                    Console.WriteLine("Theater One is SOLD OUT!!");
+                }
                 return available;
             }
             // take verified order from the bank
@@ -62,7 +145,7 @@ namespace CSE445Project2
                 //update price
 
 
-                while (countOne < 10 && seatsOne > 0)
+                while (countOne < 20 && seatsOne > 0)
                 {
                     Thread.Sleep(500);
                     //take order from queue
@@ -83,13 +166,13 @@ namespace CSE445Project2
                     }
                     //RECALC PRICE
                     Console.WriteLine("ticket seller! Count1 is {0}", countOne);
-                    int newPrice = calculatePrice();//price calc function
+                    double newPrice = calculatePrice();//price calc function
                     lowerPrice(newPrice); //what eventually triggers event for price cut
 
                 }
 
             }
-            public void lowerPrice(int newPrice) //Checking if price cut actually happened, if yes, call delegate 
+            public void lowerPrice(double newPrice) //Checking if price cut actually happened, if yes, call delegate 
             {
                 if (newPrice <= ticketPriceONE)
                 {
@@ -116,22 +199,127 @@ namespace CSE445Project2
         {
             int theaterID = 2;
             int countTwo = 0;
-            int seatTwo = 100; // I think these should be Static???
+            int seatTwo = 200; 
             public static event priceCutEvent priceCutTWO; //Link event to delegate
                                                            //TODO MAKE THREE THEATRE PRICING SCHEMES
                                                            //for now and testing purposes use RNG and static pricing
-            private static int ticketPriceTwo = 40;
+            private static double ticketPriceTwo = 40;
 
 
-            public int calculatePrice()  //Pricing Model?
+            public double calculatePrice()  //Pricing Model?
 
             {
-                int price = rng.Next(1, 10);
+                double price;
+                int season = rng.Next(1, 5);
+                DateTime moment = DateTime.Now;
+                int dayOfWeek = rng.Next(1, 8);
 
-                //int price = 12;
+                if (season == 1)
+                {
+                    if (dayOfWeek <= 3)
+                    {
+                        if (ticketPriceTwo <= 150)
+                        {
+                            price = ticketPriceTwo + (ticketPriceTwo * (.1 * rng.Next(1, 4)));
+                        }
+                        else
+                        {
+                            price = ticketPriceTwo / 3;
+                        }
+                    }
+                    else
+                    {
+                        if (ticketPriceTwo <= 120)
+                        {
+                            price = ticketPriceTwo + (ticketPriceTwo * (.157 * rng.Next(1, 3)));
+                        }
+                        else
+                        {
+                            price = (ticketPriceTwo / 4) + rng.Next(10, 16);
+                        }
+                    }
+                }
+                else if (season == 2)
+                {
+                    if (dayOfWeek <= 4)
+                    {
+                        if (ticketPriceTwo <= 100)
+                        {
+                            price = (ticketPriceTwo / 2) + rng.Next(21, 150);
+                        }
+                        else
+                        {
+                            price = ticketPriceTwo / 3 - rng.Next(8, 24);
+                        }
+                    }
+                    else
+                    {
+                        if (ticketPriceTwo <= 100)
+                        {
+                            price = (ticketPriceTwo / 2) + rng.Next(21, 150);
+                        }
+                        else
+                        {
+                            price = ticketPriceTwo / 3;
+                        }
+                    }
+                }
+                else if (season == 3)
+                {
+                    if (dayOfWeek <= 2)
+                    {
+                        if (ticketPriceTwo <= 160)
+                        {
+                            price = (ticketPriceTwo / 4) + rng.Next(25, 159);
+                        }
+                        else
+                        {
+                            price = ticketPriceTwo / 2 + rng.Next(5, 118);
+                        }
+                    }
+                    else
+                    {
+                        if (ticketPriceTwo <= 190)
+                        {
+                            price = (ticketPriceTwo / 2) + rng.Next(21, 104);
+                        }
+                        else
+                        {
+                            price = ticketPriceTwo / 3.1415;
+                        }
+                    }
+                }
+                else
+                {
+                    if (dayOfWeek <= 6)
+                    {
+                        if (ticketPriceTwo <= 160)
+                        {
+                            price = (ticketPriceTwo / 4) + rng.Next(25, 159);
+                        }
+                        else
+                        {
+                            price = ticketPriceTwo - rng.Next(1, 40);
+                        }
+                    }
+                    else
+                    {
+                        if (ticketPriceTwo <= 160)
+                        {
+                            price = (ticketPriceTwo / 4) + rng.Next(25, 159);
+                        }
+                        else
+                        {
+                            price = ticketPriceTwo / 2 + rng.Next(5, 118);
+                        }
+                    }
+                }
+
+
+
                 return price;
             }
-            public int getPrice() //getter for current Ticket Price
+            public double getPrice() //getter for current Ticket Price
             {
                 return ticketPriceTwo;
             }
@@ -148,6 +336,10 @@ namespace CSE445Project2
                     confirmationbuffer.addConfirmation(order.getTicketBrokerID(), order);
                     return available;
                 }
+                if (numTickets <= 0)
+                {
+                    Console.WriteLine("Theater Two is SOLD OUT!!");
+                }
                 return available;
             }
             // take verified order from the bank
@@ -162,14 +354,14 @@ namespace CSE445Project2
                 //update price
 
 
-                while (countTwo < 10 && seatTwo > 0)
+                while (countTwo < 20 && seatTwo > 0)
                 {
                     Thread.Sleep(500);
                     //take order from queue
                     //FulFill Order using Check Availability
                     //CHECK AVAILABILITY, IF NONE THEN QUIT
                     Order order = multiCellBuffer.getOrder(theaterID);
-                    if(order != null)
+                    if (order != null)
                     {
                         if (checkAvailability(order)) //Order Was Available and confirmed
                         {
@@ -184,13 +376,13 @@ namespace CSE445Project2
                     }
                     //RECALC PRICE
                     Console.WriteLine("ticket seller! Count2 is {0}", countTwo);
-                    int newPrice = calculatePrice();//price calc function
+                    double newPrice = calculatePrice();//price calc function
                     lowerPrice(newPrice); //what eventually triggers event for price cut
 
                 }
 
             }
-            public void lowerPrice(int newPrice) //Checking if price cut actually happened, if yes, call delegate 
+            public void lowerPrice(double newPrice) //Checking if price cut actually happened, if yes, call delegate 
             {
                 Console.WriteLine("Hello!");
                 if (newPrice <= ticketPriceTwo)
@@ -228,7 +420,7 @@ namespace CSE445Project2
             public void ticketBrokerFunc()
             {
                 //Console.WriteLine("Broker" + Thread.CurrentThread.Name + " has Started");
-                for(int i = 0; i < 10; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     Order confirmation = confirmationbuffer.getConfirmation(brokerID);
                     if (confirmation != null)
@@ -244,21 +436,50 @@ namespace CSE445Project2
                 Order confirmation = confirmationbuffer.getConfirmation(brokerID);
                 if (confirmation != null)
                 {
+
                     Console.WriteLine("EVENT: Broker{0} confirmed Order from Theater{1} for {2} Tickets at " + confirmation.getOrderTime(), brokerID, confirmation.getTheaterID(), confirmation.getTickets());
                 }
 
-                
-                //Check if there is a cell available to place the order in
-                Order newOrder = new Order(this.brokerID, ccNum, rng.Next(1, 20), theaterID, newPrice, DateTime.Now);
-                multiCellBuffer.setOrder(newOrder);
-                //place order in Buffer.
+                if (rng.Next(1,11)%2 == this.brokerID % 2)
+                {
+                    int numOfTickets = numTickets(newPrice);
+                    //Check if there is a cell available to place the order in
+                    Order newOrder = new Order(this.brokerID, ccNum, numOfTickets, theaterID, newPrice, DateTime.Now);
+                    multiCellBuffer.setOrder(newOrder);
+                    //place order in Buffer.
 
-                Console.WriteLine("The new price in theater {0} is {1} by broker {2}\n", theaterID, newPrice, brokerID);
-
-
+                    Console.WriteLine("The new price in theater {0} is {1} by broker {2}\n", theaterID, newPrice, brokerID);
+                }
+                Thread.Sleep(rng.Next(500, 1000));
                 //once confrimed that we received it??
                 //semaphore.Release();
 
+            }
+            public int numTickets(double newPrice)
+            {
+                int numTickets;
+                if (newPrice <= 40)
+                {
+                    numTickets = Convert.ToInt32(5 + (newPrice % 10));
+                }
+                else if (newPrice > 40 && newPrice <= 100)
+                {
+                    numTickets = Convert.ToInt32(4 + (newPrice % 10));
+                }
+                else if (newPrice > 100 && newPrice <= 160)
+                {
+                    numTickets = Convert.ToInt32(3 + (newPrice % 10));
+                }
+               
+                else if (newPrice > 160 && newPrice <= 190)
+                {
+                    numTickets = Convert.ToInt32(2 + (newPrice % 10));
+                }
+                else
+                {
+                    numTickets = Convert.ToInt32(1 + (newPrice % 10));
+                }
+                return numTickets;
             }
 
 
@@ -481,7 +702,7 @@ namespace CSE445Project2
                 semaphoreRead.WaitOne();
                 lock (this) //Maybe we can do try enter????
                 {
-                    
+
                     confirmations[brokerID - 1] = confirmation;
                     //Monitor.Pulse(this);
                     semaphoreRead.Release();
@@ -490,11 +711,11 @@ namespace CSE445Project2
 
             public Order getConfirmation(int brokerID)
             {
-               // Console.WriteLine("DEBUG: Broker{0} is trying to get confirmation", brokerID);
+                // Console.WriteLine("DEBUG: Broker{0} is trying to get confirmation", brokerID);
                 semaphoreRead.WaitOne();
                 lock (this)
                 {
-                    if(confirmations[brokerID -1] != null)
+                    if (confirmations[brokerID - 1] != null)
                     {
                         Order confirmation = confirmations[brokerID - 1];
                         confirmations[brokerID - 1] = null;
