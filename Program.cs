@@ -122,7 +122,6 @@ namespace CSE445Project2
                 {
                     seatsOne = seatsOne - numTickets;
                     available = true;
-                   // Console.WriteLine("DEBUG: Theater{0} is adding Confirmation for Broker{1}", theaterID, order.getTicketBrokerID());
                    //Adds Confrimation to the Confirmation Buffer for Broker
                     confirmationbuffer.addConfirmation(order.getTicketBrokerID(), order);
                     return available;
